@@ -318,6 +318,7 @@ public class KaraokePlayer {
 		stage.setScene(scene);
 		stage.setTitle("Karaoke Live Player");
 		stage.show();
+		stage.setOnCloseRequest(e -> disposeCurrentAudio());
 
 		// -------------------------------------------------------
 		// HOTKEYS
@@ -326,7 +327,7 @@ public class KaraokePlayer {
 
 			if (e.getCode() == KeyCode.SPACE) {
 				if (player != null) {
-					player.stop();
+					disposeCurrentAudio();
 					slider.setValue(0);
 					lblNowPlaying.setText("In riproduzione: ---");
 					lblTime.setText("00:00");
@@ -443,7 +444,7 @@ public class KaraokePlayer {
 		// -------------------------------------------------------
 		btnStop.setOnAction(e -> {
 			if (player != null) {
-				player.stop();
+				disposeCurrentAudio();
 				slider.setValue(0);
 				lblTime.setText("00:00");
 				lblNowPlaying.setText("In riproduzione: ---");
@@ -544,18 +545,7 @@ public class KaraokePlayer {
 // -------------------------------------------------------
 // STOP & CLEANUP PRECEDENTE PLAYER + TIMELINE
 // -------------------------------------------------------
-			if (player != null) {
-				try {
-					player.stop();
-					player.dispose(); // 🔥 fondamentale per evitare file lock
-				} catch (Exception ignored) {
-				}
-			}
-
-			if (timeline != null) {
-				timeline.stop();
-				timeline = null;
-			}
+			disposeCurrentAudio();
 
 			currentMp3 = mp3;
 			lyricsPane.setVvalue(0);
@@ -580,38 +570,35 @@ public class KaraokePlayer {
 // -------------------------------------------------------
 // CREA NUOVO MEDIAPLAYER
 // -------------------------------------------------------
-			player = new MediaPlayer(new Media(mp3.toUri().toString()));
+			MediaPlayer newPlayer = new MediaPlayer(new Media(mp3.toUri().toString()));
+			player = newPlayer;
 
 // Quando il player è pronto
-			player.setOnReady(() -> {
-				double total = player.getTotalDuration().toMillis();
+			newPlayer.setOnReady(() -> {
+				if (player != newPlayer)
+					return;
+				double total = newPlayer.getTotalDuration().toMillis();
 				slider.setMax(total);
 				lblTotal.setText(formatTime(total));
-				player.setVolume(volumeSlider.getValue() / 100.0);
+				newPlayer.setVolume(volumeSlider.getValue() / 100.0);
 			});
 
 // Quando il brano finisce
-			player.setOnEndOfMedia(() -> {
-				if (timeline != null) {
-					timeline.stop();
-					timeline = null;
-				}
+			newPlayer.setOnEndOfMedia(() -> {
+				if (player != newPlayer)
+					return;
+				disposeCurrentAudio();
 				slider.setValue(0);
 				lblTime.setText("00:00");
 				lblNowPlaying.setText("In riproduzione: ---");
 			});
 
 // Gestione errori
-			player.setOnError(() -> {
-				System.err.println("Errore MediaPlayer: " + player.getError());
-				if (timeline != null) {
-					timeline.stop();
-					timeline = null;
-				}
-				try {
-					player.dispose();
-				} catch (Exception ignored) {
-				}
+			newPlayer.setOnError(() -> {
+				if (player != newPlayer)
+					return;
+				System.err.println("Errore MediaPlayer: " + newPlayer.getError());
+				disposeCurrentAudio();
 			});
 
 // -------------------------------------------------------
@@ -620,10 +607,10 @@ public class KaraokePlayer {
 			timeline = new Timeline(new KeyFrame(Duration.millis(100), e -> {
 
 				// Protezione: se il player non sta riproducendo, non aggiornare
-				if (player.getStatus() != MediaPlayer.Status.PLAYING)
+				if (player != newPlayer || newPlayer.getStatus() != MediaPlayer.Status.PLAYING)
 					return;
 
-				double now = player.getCurrentTime().toMillis();
+				double now = newPlayer.getCurrentTime().toMillis();
 
 				// Aggiorna slider
 				slider.setValue(now);
@@ -642,11 +629,40 @@ public class KaraokePlayer {
 // -------------------------------------------------------
 // AVVIA RIPRODUZIONE
 // -------------------------------------------------------
-			player.seek(Duration.ZERO);
-			player.play();
+			newPlayer.seek(Duration.ZERO);
+			newPlayer.play();
 
 		} catch (Exception ex) {
 			ex.printStackTrace();
+			disposeCurrentAudio();
+		}
+	}
+
+	private void disposeCurrentAudio() {
+		if (timeline != null) {
+			timeline.stop();
+			timeline = null;
+		}
+
+		MediaPlayer oldPlayer = player;
+		player = null;
+
+		if (oldPlayer != null) {
+			oldPlayer.setOnReady(null);
+			oldPlayer.setOnEndOfMedia(null);
+			oldPlayer.setOnError(null);
+
+			try {
+				oldPlayer.stop();
+			} catch (RuntimeException ex) {
+				System.err.println("Errore durante l'arresto del MediaPlayer: " + ex.getMessage());
+			}
+
+			try {
+				oldPlayer.dispose();
+			} catch (RuntimeException ex) {
+				System.err.println("Errore durante lo rilascio del MediaPlayer: " + ex.getMessage());
+			}
 		}
 	}
 
