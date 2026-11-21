@@ -19,7 +19,6 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Slider;
-import javafx.scene.control.SplitPane;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
@@ -76,9 +75,9 @@ public class KaraokePlayer {
 		// LISTA GENERI
 		// -------------------------------------------------------
 		ListView<File> listGenres = new ListView<>();
-		listGenres.setMinWidth(140);
+		listGenres.setMinWidth(220);
 		listGenres.setPrefWidth(220);
-		listGenres.setMaxWidth(380);
+		listGenres.setMaxWidth(220);
 
 		String savedRoot = config.getRootFolder();
 		if (!savedRoot.isEmpty()) {
@@ -114,9 +113,9 @@ public class KaraokePlayer {
 		// LISTA CANZONI
 		// -------------------------------------------------------
 		ListView<File> listSongs = new ListView<>();
-		listSongs.setMinWidth(300);
+		listSongs.setMinWidth(420);
 		listSongs.setPrefWidth(420);
-		listSongs.setMaxWidth(620);
+		listSongs.setMaxWidth(420);
 
 		listSongs.setStyle("""
 				    -fx-control-inner-background: black;
@@ -150,7 +149,7 @@ public class KaraokePlayer {
 		flow.setLineSpacing(lyricsLineSpacing);
 
 		lyricsPane = new ScrollPane(flow); // ✅ ORA è globale
-		lyricsPane.setMinWidth(320);
+		lyricsPane.setMinWidth(0);
 		lyricsPane.setFitToWidth(true);
 		lyricsPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
 		lyricsPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
@@ -218,7 +217,6 @@ public class KaraokePlayer {
 		// COLONNA CENTRALE
 		// -------------------------------------------------------
 		VBox centerColumn = new VBox(listSongs, controlsColumn);
-		centerColumn.setMinWidth(350);
 		centerColumn.setSpacing(10);
 		centerColumn.setPadding(new Insets(10));
 		VBox.setVgrow(listSongs, Priority.ALWAYS);
@@ -226,9 +224,10 @@ public class KaraokePlayer {
 		// -------------------------------------------------------
 		// LAYOUT 3 COLONNE: GENERI | CENTRO | LYRICS
 		// -------------------------------------------------------
-		SplitPane centerArea = new SplitPane(listGenres, centerColumn, lyricsPane);
-		centerArea.setDividerPositions(0.18, 0.52);
+		HBox centerArea = new HBox(listGenres, centerColumn, lyricsPane);
+		centerArea.setSpacing(10);
 		centerArea.setPadding(new Insets(10));
+		HBox.setHgrow(lyricsPane, Priority.ALWAYS);
 
 		// -------------------------------------------------------
 		// BOTTOM BAR: Scegli Cartella | Zoom + | Zoom - | Font popout | Apri popout |
