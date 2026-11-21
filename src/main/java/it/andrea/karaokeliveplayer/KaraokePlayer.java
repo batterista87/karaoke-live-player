@@ -43,6 +43,7 @@ public class KaraokePlayer {
 	private Timeline timeline;
 	private Path currentMp3;
 	private double lyricsFontSize;
+	private double lyricsLineSpacing;
 	private double smoothTarget = 0;
 
 	private Stage lyricsWindow = null;
@@ -67,6 +68,7 @@ public class KaraokePlayer {
 		ConfigManager config = new ConfigManager();
 
 		lyricsFontSize = config.getLyricsFontSize();
+		lyricsLineSpacing = config.getLyricsLineSpacing();
 		popoutFontSize = config.getPopoutFontSize();
 
 		// -------------------------------------------------------
@@ -139,6 +141,7 @@ public class KaraokePlayer {
 		// -------------------------------------------------------
 		flow.setPadding(new Insets(25));
 		flow.setStyle("-fx-background-color:#000000;");
+		flow.setLineSpacing(lyricsLineSpacing);
 
 		lyricsPane = new ScrollPane(flow); // ✅ ORA è globale
 		lyricsPane.setFitToWidth(true);
@@ -257,6 +260,21 @@ public class KaraokePlayer {
 			}
 		});
 
+		ComboBox<Integer> cmbLyricsLineSpacing = new ComboBox<>();
+		for (int i = 0; i <= 30; i += 2)
+			cmbLyricsLineSpacing.getItems().add(i);
+		cmbLyricsLineSpacing.setValue((int) lyricsLineSpacing);
+
+		cmbLyricsLineSpacing.valueProperty().addListener((obs, oldV, newV) -> {
+			if (newV == null)
+				return;
+			lyricsLineSpacing = newV;
+			flow.setLineSpacing(lyricsLineSpacing);
+			config.setLyricsLineSpacing(lyricsLineSpacing);
+			config.save();
+		});
+		cmbLyricsLineSpacing.setFocusTraversable(false);
+
 		Button btnFull = new Button("⛶");
 		btnFull.setStyle("-fx-font-size:20px; -fx-padding:6; -fx-background-color:#444; -fx-text-fill:white;");
 
@@ -264,7 +282,7 @@ public class KaraokePlayer {
 		HBox.setHgrow(bottomSpacer, Priority.ALWAYS);
 
 		HBox bottomBar = new HBox(10, btnSelectFolder, btnZoomIn, btnZoomOut, new Label("Font Lyrics:"), cmbPopoutFont,
-				btnPopoutLyrics, bottomSpacer, btnFull);
+				new Label("Spaziatura righe:"), cmbLyricsLineSpacing, btnPopoutLyrics, bottomSpacer, btnFull);
 		bottomBar.setPadding(new Insets(10));
 		bottomBar.setStyle("-fx-background-color:#222;");
 		bottomBar.setAlignment(Pos.CENTER_LEFT);

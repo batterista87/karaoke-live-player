@@ -52,6 +52,20 @@ public class ConfigManager {
             return 20;  // valore di fallback
         }
     }
+
+    public void setLyricsLineSpacing(double size) {
+        props.setProperty("lyricsLineSpacing", Double.toString(size));
+    }
+
+    public double getLyricsLineSpacing() {
+        try {
+            double size = Double.parseDouble(props.getProperty("lyricsLineSpacing", "8"));
+            int normalized = (int) (Math.round(size / 2.0) * 2);
+            return Math.max(0, Math.min(30, normalized));
+        } catch (Exception e) {
+            return 8;
+        }
+    }
     
     public int getPopoutFontSize() {
         return Integer.parseInt(props.getProperty("popoutFontSize", "54"));
