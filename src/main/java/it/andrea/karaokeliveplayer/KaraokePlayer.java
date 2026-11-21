@@ -75,7 +75,9 @@ public class KaraokePlayer {
 		// LISTA GENERI
 		// -------------------------------------------------------
 		ListView<File> listGenres = new ListView<>();
+		listGenres.setMinWidth(220);
 		listGenres.setPrefWidth(220);
+		listGenres.setMaxWidth(220);
 
 		String savedRoot = config.getRootFolder();
 		if (!savedRoot.isEmpty()) {
@@ -111,7 +113,9 @@ public class KaraokePlayer {
 		// LISTA CANZONI
 		// -------------------------------------------------------
 		ListView<File> listSongs = new ListView<>();
+		listSongs.setMinWidth(420);
 		listSongs.setPrefWidth(420);
+		listSongs.setMaxWidth(420);
 
 		listSongs.setStyle("""
 				    -fx-control-inner-background: black;
@@ -139,11 +143,13 @@ public class KaraokePlayer {
 		// -------------------------------------------------------
 		// LYRICS PANEL (PRINCIPALE)
 		// -------------------------------------------------------
+		flow.setMinWidth(0);
 		flow.setPadding(new Insets(25));
 		flow.setStyle("-fx-background-color:#000000;");
 		flow.setLineSpacing(lyricsLineSpacing);
 
 		lyricsPane = new ScrollPane(flow); // ✅ ORA è globale
+		lyricsPane.setMinWidth(0);
 		lyricsPane.setFitToWidth(true);
 		lyricsPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
 		lyricsPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
@@ -393,6 +399,7 @@ public class KaraokePlayer {
 
 			// ✅ crea ScrollPane popout e sposta il flow
 			lyricsPaneSecondary = new ScrollPane(flow);
+			lyricsPaneSecondary.setMinWidth(0);
 			lyricsPaneSecondary.setFitToWidth(true);
 			lyricsPaneSecondary.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
 			lyricsPaneSecondary.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER); // ✅ Rimuove scrollbar verticale
