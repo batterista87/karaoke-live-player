@@ -340,7 +340,18 @@ public class KaraokePlayer {
 		stage.setScene(scene);
 		stage.setTitle("Karaoke Live Player");
 		stage.show();
-		stage.setOnCloseRequest(e -> disposeCurrentAudio());
+		stage.setOnCloseRequest(e -> {
+			try {
+				disposeCurrentAudio();
+			} finally {
+				try {
+					if (lyricsWindow != null)
+						lyricsWindow.close();
+				} finally {
+					Platform.exit();
+				}
+			}
+		});
 
 		// -------------------------------------------------------
 		// HOTKEYS
@@ -662,18 +673,35 @@ public class KaraokePlayer {
 	}
 
 	private void disposeCurrentAudio() {
-		if (timeline != null) {
-			timeline.stop();
-			timeline = null;
+		Timeline oldTimeline = timeline;
+		timeline = null;
+		if (oldTimeline != null) {
+			try {
+				oldTimeline.stop();
+			} catch (RuntimeException ex) {
+				System.err.println("Errore durante l'arresto della timeline: " + ex.getMessage());
+			}
 		}
 
 		MediaPlayer oldPlayer = player;
 		player = null;
 
 		if (oldPlayer != null) {
-			oldPlayer.setOnReady(null);
-			oldPlayer.setOnEndOfMedia(null);
-			oldPlayer.setOnError(null);
+			try {
+				oldPlayer.setOnReady(null);
+			} catch (RuntimeException ex) {
+				System.err.println("Errore durante la rimozione dell'handler ready: " + ex.getMessage());
+			}
+			try {
+				oldPlayer.setOnEndOfMedia(null);
+			} catch (RuntimeException ex) {
+				System.err.println("Errore durante la rimozione dell'handler end: " + ex.getMessage());
+			}
+			try {
+				oldPlayer.setOnError(null);
+			} catch (RuntimeException ex) {
+				System.err.println("Errore durante la rimozione dell'handler error: " + ex.getMessage());
+			}
 
 			try {
 				oldPlayer.stop();
