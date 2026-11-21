@@ -248,16 +248,14 @@ public class KaraokePlayer {
 		cmbPopoutFont.setValue(popoutFontSize);
 
 		cmbPopoutFont.valueProperty().addListener((obs, oldV, newV) -> {
-			config.setPopoutFontSize(newV);
-			config.save();
+			if (newV == null)
+				return;
+			lyricsFontSize = newV;
 			popoutFontSize = newV;
-
-			if (lyricsWindow != null) {
-				flow.getChildren().forEach(n -> {
-					if (n instanceof Text t)
-						t.setFont(Font.font("Arial", popoutFontSize));
-				});
-			}
+			config.setLyricsFontSize(lyricsFontSize);
+			config.setPopoutFontSize(popoutFontSize);
+			config.save();
+			applyLyricsZoom();
 		});
 
 		ComboBox<Integer> cmbLyricsLineSpacing = new ComboBox<>();
