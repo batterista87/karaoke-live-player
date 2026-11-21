@@ -693,6 +693,7 @@ public class KaraokePlayer {
 		TextFlow activeFlow = (TextFlow) activePane.getContent();
 
 		var nodes = activeFlow.getChildren().stream().filter(n -> n instanceof Text).map(n -> (Text) n).toList();
+		Font lyricsFont = Font.font("Arial", lyricsWindow != null ? popoutFontSize : lyricsFontSize);
 
 		int activeIndex = -1;
 
@@ -700,17 +701,17 @@ public class KaraokePlayer {
 		for (int i = 0; i < currentLyrics.size(); i++) {
 			LyricsLine line = currentLyrics.get(i);
 			Text node = nodes.get(i);
+			if (!node.getFont().equals(lyricsFont))
+				node.setFont(lyricsFont);
 
 			boolean active = now >= line.timestampMs
 					&& (i == currentLyrics.size() - 1 || now < currentLyrics.get(i + 1).timestampMs);
 
 			if (active) {
 				node.setFill(Color.YELLOW);
-				node.setStyle("-fx-font-weight:bold;");
 				activeIndex = i;
 			} else {
 				node.setFill(Color.rgb(180, 180, 180));
-				node.setStyle("");
 			}
 		}
 
@@ -729,9 +730,14 @@ public class KaraokePlayer {
 
 		// Altezza visibile
 		double viewport = activePane.getViewportBounds().getHeight();
+		double scrollRange = contentHeight - viewport;
+		if (scrollRange <= 0) {
+			activePane.setVvalue(0);
+			return;
+		}
 
 		// Calcolo del target (0..1)
-		double target = (y - viewport * 0.3) / (contentHeight - viewport);
+		double target = (y - viewport * 0.3) / scrollRange;
 		target = Math.max(0, Math.min(1, target));
 
 		// Smooth scroll
