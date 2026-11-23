@@ -680,6 +680,9 @@ public class KaraokePlayer {
 			File[] mp3Files = genre.listFiles((d, n) -> n.toLowerCase().endsWith(".mp3"));
 			if (mp3Files == null) {
 				songs.getItems().clear();
+				songs.getSelectionModel().clearSelection();
+				songs.getFocusModel().focus(-1);
+				songs.scrollTo(0);
 				System.err.println("Impossibile leggere la cartella dei brani: " + genre.getAbsolutePath());
 				return;
 			}
@@ -724,6 +727,9 @@ public class KaraokePlayer {
 				}
 			}
 			songs.getItems().setAll(entries);
+			songs.getSelectionModel().clearSelection();
+			songs.getFocusModel().focus(-1);
+			songs.scrollTo(0);
 		}
 	}
 
