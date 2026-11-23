@@ -48,6 +48,32 @@ public class ConfigManager {
     public boolean getShowSubfolders() {
         return Boolean.parseBoolean(props.getProperty("showSubfolders", "true"));
     }
+
+    public int getGenreFontSize() {
+        return getListFontSize("genreFontSize");
+    }
+
+    public void setGenreFontSize(int size) {
+        props.setProperty("genreFontSize", Integer.toString(size));
+    }
+
+    public int getSongFontSize() {
+        return getListFontSize("songFontSize");
+    }
+
+    public void setSongFontSize(int size) {
+        props.setProperty("songFontSize", Integer.toString(size));
+    }
+
+    private int getListFontSize(String key) {
+        try {
+            int size = Integer.parseInt(props.getProperty(key, "20"));
+            int normalized = (int) (Math.round(size / 2.0) * 2);
+            return Math.max(12, Math.min(36, normalized));
+        } catch (NumberFormatException e) {
+            return 20;
+        }
+    }
     
     public void setLyricsFontSize(double size) {
         props.setProperty("lyricsFontSize", Double.toString(size));

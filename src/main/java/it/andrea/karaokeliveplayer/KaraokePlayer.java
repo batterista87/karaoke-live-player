@@ -61,6 +61,8 @@ public class KaraokePlayer {
 	private Path currentMp3;
 	private double lyricsFontSize;
 	private double lyricsLineSpacing;
+	private int genreFontSize;
+	private int songFontSize;
 
 	private Stage lyricsWindow = null;
 	private ScrollPane lyricsPaneSecondary = null;
@@ -87,6 +89,8 @@ public class KaraokePlayer {
 		lyricsFontSize = config.getLyricsFontSize();
 		lyricsLineSpacing = config.getLyricsLineSpacing();
 		popoutFontSize = config.getPopoutFontSize();
+		genreFontSize = config.getGenreFontSize();
+		songFontSize = config.getSongFontSize();
 
 		// -------------------------------------------------------
 		// LISTA GENERI
@@ -120,7 +124,7 @@ public class KaraokePlayer {
 					setText(null);
 				} else {
 					setText(item.getName());
-					setFont(Font.font("Arial", FontWeight.BOLD, 20));
+					setFont(Font.font("Arial", FontWeight.BOLD, genreFontSize));
 					setTextFill(Color.WHITE);
 				}
 			}
@@ -151,7 +155,7 @@ public class KaraokePlayer {
 					setText(null);
 				} else if (item instanceof SongEntry songEntry) {
 					setText(songEntry.file().getName().replaceAll("\\.mp3$", "").replaceAll("\\.MP3$", ""));
-					setFont(Font.font("Arial", FontWeight.BOLD, 20));
+					setFont(Font.font("Arial", FontWeight.BOLD, songFontSize));
 					setTextFill(Color.WHITE);
 				} else if (item instanceof SectionHeader header) {
 					setText(header.title());
@@ -275,6 +279,34 @@ public class KaraokePlayer {
 		chkShowSubfolders.setStyle("-fx-text-fill:white;");
 		chkShowSubfolders.setFocusTraversable(false);
 
+		ComboBox<Integer> cmbGenreFontSize = new ComboBox<>();
+		for (int size = 12; size <= 36; size += 2)
+			cmbGenreFontSize.getItems().add(size);
+		cmbGenreFontSize.setValue(genreFontSize);
+		cmbGenreFontSize.setFocusTraversable(false);
+		cmbGenreFontSize.valueProperty().addListener((obs, oldSize, newSize) -> {
+			if (newSize == null)
+				return;
+			genreFontSize = newSize;
+			listGenres.refresh();
+			config.setGenreFontSize(newSize);
+			config.save();
+		});
+
+		ComboBox<Integer> cmbSongFontSize = new ComboBox<>();
+		for (int size = 12; size <= 36; size += 2)
+			cmbSongFontSize.getItems().add(size);
+		cmbSongFontSize.setValue(songFontSize);
+		cmbSongFontSize.setFocusTraversable(false);
+		cmbSongFontSize.valueProperty().addListener((obs, oldSize, newSize) -> {
+			if (newSize == null)
+				return;
+			songFontSize = newSize;
+			listSongs.refresh();
+			config.setSongFontSize(newSize);
+			config.save();
+		});
+
 		Button btnZoomIn = new Button("＋");
 		btnZoomIn.setStyle(
 				"-fx-background-color:#444; -fx-background-radius:6; -fx-text-fill:white; -fx-font-size:18px; -fx-padding:4 10;");
@@ -323,7 +355,8 @@ public class KaraokePlayer {
 		Region bottomSpacer = new Region();
 		HBox.setHgrow(bottomSpacer, Priority.ALWAYS);
 
-		HBox bottomBar = new HBox(10, btnSelectFolder, chkShowSubfolders, btnZoomIn, btnZoomOut,
+		HBox bottomBar = new HBox(10, btnSelectFolder, chkShowSubfolders, new Label("Font generi:"),
+				cmbGenreFontSize, new Label("Font brani:"), cmbSongFontSize, btnZoomIn, btnZoomOut,
 				new Label("Font Lyrics:"), cmbPopoutFont, new Label("Spaziatura righe:"), cmbLyricsLineSpacing,
 				btnPopoutLyrics, bottomSpacer, btnFull);
 		bottomBar.setPadding(new Insets(10));
