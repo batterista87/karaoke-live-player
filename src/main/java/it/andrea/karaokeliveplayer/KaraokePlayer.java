@@ -567,8 +567,13 @@ public class KaraokePlayer {
 	private void loadSongs(ListView<File> genres, ListView<File> songs) {
 		File genre = genres.getSelectionModel().getSelectedItem();
 		if (genre != null) {
-			List<File> mp3s = Arrays.stream(genre.listFiles((d, n) -> n.toLowerCase().endsWith(".mp3"))).toList();
-			songs.getItems().setAll(mp3s);
+			File[] mp3Files = genre.listFiles((d, n) -> n.toLowerCase().endsWith(".mp3"));
+			if (mp3Files == null) {
+				songs.getItems().clear();
+				System.err.println("Impossibile leggere la cartella dei brani: " + genre.getAbsolutePath());
+				return;
+			}
+			songs.getItems().setAll(Arrays.stream(mp3Files).toList());
 		}
 	}
 
