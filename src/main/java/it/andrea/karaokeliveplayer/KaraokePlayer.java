@@ -419,13 +419,11 @@ public class KaraokePlayer {
 			}
 
 			if (e.getCode() == KeyCode.SPACE) {
-				if (player != null) {
-					disposeCurrentAudio();
-					slider.setValue(0);
-					lblNowPlaying.setText("In riproduzione: ---");
-					lblTime.setText("00:00");
-					lblTotal.setText("--:--");
-				}
+				disposeCurrentAudio();
+				slider.setValue(0);
+				lblNowPlaying.setText("In riproduzione: ---");
+				lblTime.setText("00:00");
+				lblTotal.setText("--:--");
 				e.consume();
 			}
 
@@ -538,20 +536,18 @@ public class KaraokePlayer {
 		// PLAY
 		// -------------------------------------------------------
 		btnPlay.setOnAction(e -> {
-			if (currentMp3 != null)
-				playMp3(currentMp3, slider, volumeSlider, lblTime, lblTotal, lblNowPlaying);
+			if (isWithin(scene.getFocusOwner(), listSongs))
+				playSelected(listSongs, slider, volumeSlider, lblTime, lblTotal, lblNowPlaying);
 		});
 
 		// -------------------------------------------------------
 		// STOP
 		// -------------------------------------------------------
 		btnStop.setOnAction(e -> {
-			if (player != null) {
-				disposeCurrentAudio();
-				slider.setValue(0);
-				lblTime.setText("00:00");
-				lblNowPlaying.setText("In riproduzione: ---");
-			}
+			disposeCurrentAudio();
+			slider.setValue(0);
+			lblTime.setText("00:00");
+			lblNowPlaying.setText("In riproduzione: ---");
 		});
 
 		// -------------------------------------------------------
@@ -835,6 +831,8 @@ public class KaraokePlayer {
 	}
 
 	private void disposeCurrentAudio() {
+		currentMp3 = null;
+
 		Timeline oldTimeline = timeline;
 		timeline = null;
 		if (oldTimeline != null) {
