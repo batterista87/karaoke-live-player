@@ -21,6 +21,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.OverrunStyle;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Slider;
 import javafx.scene.input.KeyCode;
@@ -198,6 +199,10 @@ public class KaraokePlayer {
 		Label lblNowPlaying = new Label("In riproduzione: ---");
 		lblNowPlaying.setFont(Font.font("Arial", FontWeight.BOLD, 14));
 		lblNowPlaying.setTextFill(Color.YELLOW);
+		lblNowPlaying.setMinWidth(0);
+		lblNowPlaying.setPrefWidth(400);
+		lblNowPlaying.setMaxWidth(400);
+		lblNowPlaying.setTextOverrun(OverrunStyle.ELLIPSIS);
 
 		Slider slider = new Slider();
 
@@ -217,6 +222,9 @@ public class KaraokePlayer {
 
 		HBox mediaControls = new HBox(15, btnPlay, btnStop, lblTime, slider, lblTotal);
 		mediaControls.setAlignment(Pos.CENTER);
+		mediaControls.setMinWidth(400);
+		mediaControls.setPrefWidth(400);
+		mediaControls.setMaxWidth(400);
 
 		// --- FINE BLOCCO A ---
 
