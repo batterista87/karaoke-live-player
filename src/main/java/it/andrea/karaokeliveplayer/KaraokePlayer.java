@@ -11,6 +11,7 @@ import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -357,6 +358,10 @@ public class KaraokePlayer {
 		// HOTKEYS
 		// -------------------------------------------------------
 		scene.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
+			if (e.getTarget() instanceof Node target && isWithin(target, lyricsPane)) {
+				e.consume();
+				return;
+			}
 
 			if (e.getCode() == KeyCode.SPACE) {
 				if (player != null) {
@@ -411,6 +416,7 @@ public class KaraokePlayer {
 			// ✅ crea ScrollPane popout e sposta il flow
 			lyricsPaneSecondary = new ScrollPane(flow);
 			lyricsPaneSecondary.setMinWidth(0);
+			lyricsPaneSecondary.setFocusTraversable(false);
 			lyricsPaneSecondary.setFitToWidth(true);
 			lyricsPaneSecondary.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
 			lyricsPaneSecondary.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER); // ✅ Rimuove scrollbar verticale
@@ -436,6 +442,10 @@ public class KaraokePlayer {
 
 			// crea scena popout
 			Scene sc = new Scene(lyricsPaneSecondary, 900, 700);
+			sc.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
+				if (e.getTarget() instanceof Node target && isWithin(target, lyricsPaneSecondary))
+					e.consume();
+			});
 			lyricsWindow.setScene(sc);
 			lyricsWindow.show();
 
@@ -554,6 +564,14 @@ public class KaraokePlayer {
 			if (n instanceof Text t)
 				t.setFont(Font.font("Arial", lyricsFontSize));
 		});
+	}
+
+	private static boolean isWithin(Node node, Node ancestor) {
+		for (Node current = node; current != null; current = current.getParent()) {
+			if (current == ancestor)
+				return true;
+		}
+		return false;
 	}
 
 	private void playSelected(ListView<File> listSongs, Slider slider, Slider volumeSlider, Label lblTime,
