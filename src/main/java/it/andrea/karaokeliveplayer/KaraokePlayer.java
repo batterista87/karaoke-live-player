@@ -331,14 +331,6 @@ public class KaraokePlayer {
 			config.save();
 		});
 
-		Button btnZoomIn = new Button("＋");
-		btnZoomIn.setStyle(
-				"-fx-background-color:#444; -fx-background-radius:6; -fx-text-fill:white; -fx-font-size:18px; -fx-padding:4 10;");
-
-		Button btnZoomOut = new Button("－");
-		btnZoomOut.setStyle(
-				"-fx-background-color:#444; -fx-background-radius:6; -fx-text-fill:white; -fx-font-size:18px; -fx-padding:4 10;");
-
 		Button btnPopoutLyrics = new Button("Apri finestra Lyrics");
 		btnPopoutLyrics.setStyle("-fx-background-color:#555; -fx-text-fill:white; -fx-font-size:14px;");
 
@@ -381,7 +373,7 @@ public class KaraokePlayer {
 
 		HBox bottomBar = new HBox(10, btnSelectFolder, chkShowSubfolders, new Label("Font generi:"),
 				cmbGenreFontSize, new Label("Font brani:"), cmbSongFontSize, new Label("Font intestazioni:"),
-				cmbSongHeaderFontSize, btnZoomIn, btnZoomOut, new Label("Font Lyrics:"), cmbPopoutFont,
+				cmbSongHeaderFontSize, new Label("Font Lyrics:"), cmbPopoutFont,
 				new Label("Spaziatura righe:"), cmbLyricsLineSpacing, btnPopoutLyrics, bottomSpacer, btnFull);
 		bottomBar.setPadding(new Insets(10));
 		bottomBar.setStyle("-fx-background-color:#222;");
@@ -401,8 +393,6 @@ public class KaraokePlayer {
 		btnStop.setFocusTraversable(false);
 
 		btnSelectFolder.setFocusTraversable(false);
-		btnZoomIn.setFocusTraversable(false);
-		btnZoomOut.setFocusTraversable(false);
 		btnPopoutLyrics.setFocusTraversable(false);
 		btnFull.setFocusTraversable(false);
 
@@ -516,9 +506,7 @@ public class KaraokePlayer {
 				return;
 			}
 
-			// ✅ disabilita zoom finestra principale
-			btnZoomIn.setDisable(true);
-			btnZoomOut.setDisable(true);
+			cmbPopoutFont.setDisable(true);
 
 			lyricsWindow = new Stage();
 			lyricsWindow.setTitle("Lyrics - Monitor");
@@ -583,9 +571,7 @@ public class KaraokePlayer {
 				lyricsWindow = null;
 				lyricsPaneSecondary = null;
 
-				// ✅ riattiva zoom
-				btnZoomIn.setDisable(false);
-				btnZoomOut.setDisable(false);
+				cmbPopoutFont.setDisable(false);
 			});
 		});
 
@@ -634,25 +620,6 @@ public class KaraokePlayer {
 					&& listSongs.getSelectionModel().getSelectedItem() instanceof SongEntry) {
 				listGenres.requestFocus();
 				playSelected(listSongs, slider, volumeSlider, lblTime, lblTotal, lblNowPlaying);
-			}
-		});
-
-		// -------------------------------------------------------
-		// ZOOM LYRICS (MAIN WINDOW)
-		// -------------------------------------------------------
-		btnZoomIn.setOnAction(e -> {
-			lyricsFontSize += 2;
-			applyLyricsZoom();
-			config.setLyricsFontSize(lyricsFontSize);
-			config.save();
-		});
-
-		btnZoomOut.setOnAction(e -> {
-			if (lyricsFontSize > 10) {
-				lyricsFontSize -= 2;
-				applyLyricsZoom();
-				config.setLyricsFontSize(lyricsFontSize);
-				config.save();
 			}
 		});
 
