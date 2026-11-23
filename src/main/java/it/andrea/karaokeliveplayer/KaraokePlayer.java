@@ -618,7 +618,9 @@ public class KaraokePlayer {
 
 		while (index >= 0 && index < listSongs.getItems().size()) {
 			if (listSongs.getItems().get(index) instanceof SongEntry) {
+				listSongs.getFocusModel().focus(index);
 				listSongs.getSelectionModel().clearAndSelect(index);
+				listSongs.scrollTo(index);
 				return;
 			}
 			index += direction;
