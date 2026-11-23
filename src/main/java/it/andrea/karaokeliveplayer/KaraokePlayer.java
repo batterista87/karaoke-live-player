@@ -44,7 +44,6 @@ public class KaraokePlayer {
 	private Path currentMp3;
 	private double lyricsFontSize;
 	private double lyricsLineSpacing;
-	private double smoothTarget = 0;
 
 	private Stage lyricsWindow = null;
 	private ScrollPane lyricsPaneSecondary = null;
@@ -130,7 +129,7 @@ public class KaraokePlayer {
 				if (empty || item == null) {
 					setText(null);
 				} else {
-					setText(item.getName().replaceAll("\\.mp3$", ""));
+					setText(item.getName().replaceAll("\\.mp3$", "").replaceAll("\\.MP3$", ""));
 					setFont(Font.font("Arial", FontWeight.BOLD, 20));
 					setTextFill(Color.WHITE);
 				}
@@ -588,9 +587,8 @@ public class KaraokePlayer {
 
 			currentMp3 = mp3;
 			lyricsPane.setVvalue(0);
-			smoothTarget = 0;
 
-			lblNowPlaying.setText("In riproduzione: " + mp3.getFileName().toString().replace(".mp3", ""));
+			lblNowPlaying.setText("In riproduzione: " + mp3.getFileName().toString().replace(".mp3", "").replace(".MP3", ""));
 
 // -------------------------------------------------------
 // CARICA LYRICS

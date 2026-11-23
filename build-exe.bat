@@ -7,7 +7,7 @@ echo ============================================
 echo.
 
 REM Percorso della JDK BellSoft Full
-set JDK="C:\jdk\bellsoft-jdk-25.0.2-full"
+set JDK="C:\jdk\bellsoft-jdk-25.0.5.1-full"
 
 REM Cartella del progetto
 set PROJECT_DIR=%~dp0
