@@ -40,6 +40,14 @@ public class ConfigManager {
     public String getRootFolder() {
         return props.getProperty("rootFolder", "");
     }
+
+    public void setShowSubfolders(boolean show) {
+        props.setProperty("showSubfolders", Boolean.toString(show));
+    }
+
+    public boolean getShowSubfolders() {
+        return Boolean.parseBoolean(props.getProperty("showSubfolders", "true"));
+    }
     
     public void setLyricsFontSize(double size) {
         props.setProperty("lyricsFontSize", Double.toString(size));

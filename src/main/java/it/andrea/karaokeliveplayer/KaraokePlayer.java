@@ -266,7 +266,7 @@ public class KaraokePlayer {
 				"-fx-background-color:#333; -fx-background-radius:8; -fx-text-fill:white; -fx-font-size:14px; -fx-padding:6 14;");
 
 		CheckBox chkShowSubfolders = new CheckBox("Visualizza sottocartelle");
-		chkShowSubfolders.setSelected(true);
+		chkShowSubfolders.setSelected(config.getShowSubfolders());
 		chkShowSubfolders.setStyle("-fx-text-fill:white;");
 		chkShowSubfolders.setFocusTraversable(false);
 
@@ -545,6 +545,8 @@ public class KaraokePlayer {
 				loadSongs(listGenres, listSongs, chkShowSubfolders.isSelected());
 		});
 		chkShowSubfolders.selectedProperty().addListener((obs, wasSelected, isSelected) -> {
+			config.setShowSubfolders(isSelected);
+			config.save();
 			if (listGenres.getSelectionModel().getSelectedItem() != null)
 				loadSongs(listGenres, listSongs, isSelected);
 		});
