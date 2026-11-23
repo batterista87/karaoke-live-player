@@ -42,13 +42,16 @@ import javafx.util.Duration;
 
 public class KaraokePlayer {
 
-	private sealed interface SongListEntry permits SongEntry, SectionHeader {
+	private sealed interface SongListEntry permits SongEntry, SectionHeader, SongListSpacer {
 	}
 
 	private record SongEntry(File file) implements SongListEntry {
 	}
 
 	private record SectionHeader(String title) implements SongListEntry {
+	}
+
+	private record SongListSpacer() implements SongListEntry {
 	}
 
 	private MediaPlayer player;
@@ -141,6 +144,7 @@ public class KaraokePlayer {
 				super.updateItem(item, empty);
 				setDisable(false);
 				setStyle("");
+				setOpacity(1);
 				if (empty || item == null) {
 					setText(null);
 				} else if (item instanceof SongEntry songEntry) {
@@ -153,6 +157,10 @@ public class KaraokePlayer {
 					setTextFill(Color.LIGHTGRAY);
 					setStyle("-fx-opacity: 1;");
 					setDisable(true);
+				} else if (item instanceof SongListSpacer) {
+					setText(" ");
+					setDisable(true);
+					setOpacity(0);
 				}
 			}
 		});
@@ -676,6 +684,7 @@ public class KaraokePlayer {
 					entries.add(new SectionHeader(genre.getName()));
 					for (File mp3 : mp3Files)
 						entries.add(new SongEntry(mp3));
+					entries.add(new SongListSpacer());
 				}
 				for (int i = 0; i < populatedSubfolders.size(); i++) {
 					entries.add(new SectionHeader(populatedSubfolders.get(i).getName()));
