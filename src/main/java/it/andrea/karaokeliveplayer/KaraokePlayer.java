@@ -190,7 +190,7 @@ public class KaraokePlayer {
 		// -------------------------------------------------------
 		VBox centerColumn = new VBox(listSongs, controlsColumn);
 		centerColumn.setSpacing(10);
-		centerColumn.setPadding(new Insets(10));
+		centerColumn.setPadding(new Insets(0, 10, 10, 10));
 		VBox.setVgrow(listSongs, Priority.ALWAYS);
 
 		// -------------------------------------------------------
