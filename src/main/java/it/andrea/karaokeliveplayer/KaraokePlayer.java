@@ -2,7 +2,9 @@ package it.andrea.karaokeliveplayer;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 import javafx.animation.Animation;
@@ -39,6 +41,15 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 public class KaraokePlayer {
+
+	private sealed interface SongListEntry permits SongEntry, SectionHeader {
+	}
+
+	private record SongEntry(File file) implements SongListEntry {
+	}
+
+	private record SectionHeader(String title) implements SongListEntry {
+	}
 
 	private MediaPlayer player;
 	private Timeline timeline;
@@ -113,7 +124,7 @@ public class KaraokePlayer {
 		// -------------------------------------------------------
 		// LISTA CANZONI
 		// -------------------------------------------------------
-		ListView<File> listSongs = new ListView<>();
+		ListView<SongListEntry> listSongs = new ListView<>();
 		listSongs.setMinWidth(420);
 		listSongs.setPrefWidth(420);
 		listSongs.setMaxWidth(420);
@@ -126,16 +137,28 @@ public class KaraokePlayer {
 
 		listSongs.setCellFactory(param -> new ListCell<>() {
 			@Override
-			protected void updateItem(File item, boolean empty) {
+			protected void updateItem(SongListEntry item, boolean empty) {
 				super.updateItem(item, empty);
+				setDisable(false);
+				setStyle("");
 				if (empty || item == null) {
 					setText(null);
-				} else {
-					setText(item.getName().replaceAll("\\.mp3$", "").replaceAll("\\.MP3$", ""));
+				} else if (item instanceof SongEntry songEntry) {
+					setText(songEntry.file().getName().replaceAll("\\.mp3$", "").replaceAll("\\.MP3$", ""));
 					setFont(Font.font("Arial", FontWeight.BOLD, 20));
 					setTextFill(Color.WHITE);
+				} else if (item instanceof SectionHeader header) {
+					setText(header.title());
+					setFont(Font.font("Arial", FontWeight.BOLD, 16));
+					setTextFill(Color.LIGHTGRAY);
+					setStyle("-fx-opacity: 1;");
+					setDisable(true);
 				}
 			}
+		});
+		listSongs.getSelectionModel().selectedItemProperty().addListener((obs, previous, selected) -> {
+			if (selected instanceof SectionHeader)
+				listSongs.getSelectionModel().clearSelection();
 		});
 
 		listGenres.getStyleClass().add("focus-highlight");
@@ -504,14 +527,16 @@ public class KaraokePlayer {
 		});
 
 		listSongs.setOnMouseClicked(e -> {
-			if (e.getClickCount() == 2) {
+			if (e.getClickCount() == 2 && isSongCell(e.getPickResult().getIntersectedNode())
+					&& listSongs.getSelectionModel().getSelectedItem() instanceof SongEntry) {
 				listGenres.requestFocus();
 				playSelected(listSongs, slider, volumeSlider, lblTime, lblTotal, lblNowPlaying);
 			}
 		});
 
 		listSongs.setOnKeyPressed(e -> {
-			if (e.getCode() == KeyCode.ENTER) {
+			if (e.getCode() == KeyCode.ENTER
+					&& listSongs.getSelectionModel().getSelectedItem() instanceof SongEntry) {
 				listGenres.requestFocus();
 				playSelected(listSongs, slider, volumeSlider, lblTime, lblTotal, lblNowPlaying);
 			}
@@ -574,15 +599,23 @@ public class KaraokePlayer {
 		return false;
 	}
 
-	private void playSelected(ListView<File> listSongs, Slider slider, Slider volumeSlider, Label lblTime,
-			Label lblTotal, Label lblNowPlaying) {
-
-		File f = listSongs.getSelectionModel().getSelectedItem();
-		if (f != null)
-			playMp3(f.toPath(), slider, volumeSlider, lblTime, lblTotal, lblNowPlaying);
+	private static boolean isSongCell(Node node) {
+		for (Node current = node; current != null; current = current.getParent()) {
+			if (current instanceof ListCell<?> cell)
+				return cell.getItem() instanceof SongEntry;
+		}
+		return false;
 	}
 
-	private void loadSongs(ListView<File> genres, ListView<File> songs) {
+	private void playSelected(ListView<SongListEntry> listSongs, Slider slider, Slider volumeSlider, Label lblTime,
+			Label lblTotal, Label lblNowPlaying) {
+
+		SongListEntry selected = listSongs.getSelectionModel().getSelectedItem();
+		if (selected instanceof SongEntry songEntry)
+			playMp3(songEntry.file().toPath(), slider, volumeSlider, lblTime, lblTotal, lblNowPlaying);
+	}
+
+	private void loadSongs(ListView<File> genres, ListView<SongListEntry> songs) {
 		File genre = genres.getSelectionModel().getSelectedItem();
 		if (genre != null) {
 			File[] mp3Files = genre.listFiles((d, n) -> n.toLowerCase().endsWith(".mp3"));
@@ -591,7 +624,44 @@ public class KaraokePlayer {
 				System.err.println("Impossibile leggere la cartella dei brani: " + genre.getAbsolutePath());
 				return;
 			}
-			songs.getItems().setAll(Arrays.stream(mp3Files).toList());
+
+			List<SongListEntry> entries = new ArrayList<>();
+			File[] subfolders = genre.listFiles(File::isDirectory);
+			List<File[]> subfolderSongs = new ArrayList<>();
+			List<File> populatedSubfolders = new ArrayList<>();
+			if (subfolders != null) {
+				Arrays.sort(subfolders, Comparator.comparing(File::getName, String.CASE_INSENSITIVE_ORDER)
+						.thenComparing(File::getName));
+				for (File subfolder : subfolders) {
+					File[] nestedMp3s = subfolder.listFiles((d, n) -> n.toLowerCase().endsWith(".mp3"));
+					if (nestedMp3s == null) {
+						System.err.println("Impossibile leggere la sottocartella dei brani: "
+								+ subfolder.getAbsolutePath());
+					} else if (nestedMp3s.length > 0) {
+						populatedSubfolders.add(subfolder);
+						subfolderSongs.add(nestedMp3s);
+					}
+				}
+			} else {
+				System.err.println("Impossibile leggere le sottocartelle di: " + genre.getAbsolutePath());
+			}
+
+			if (populatedSubfolders.isEmpty()) {
+				for (File mp3 : mp3Files)
+					entries.add(new SongEntry(mp3));
+			} else {
+				if (mp3Files.length > 0) {
+					entries.add(new SectionHeader(genre.getName()));
+					for (File mp3 : mp3Files)
+						entries.add(new SongEntry(mp3));
+				}
+				for (int i = 0; i < populatedSubfolders.size(); i++) {
+					entries.add(new SectionHeader(populatedSubfolders.get(i).getName()));
+					for (File mp3 : subfolderSongs.get(i))
+						entries.add(new SongEntry(mp3));
+				}
+			}
+			songs.getItems().setAll(entries);
 		}
 	}
 
