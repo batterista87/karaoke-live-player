@@ -52,6 +52,7 @@ public class KaraokePlayer {
 
 	private Stage lyricsWindow = null;
 	private ScrollPane lyricsPaneSecondary = null;
+	private long lyricsGeneration;
 
 	private int popoutFontSize;
 	private List<LyricsLine> currentLyrics;
@@ -445,6 +446,9 @@ public class KaraokePlayer {
 			lyricsPane.setContent(null);
 
 			// ✅ sincronizzazione immediata (scroll + highlight + font)
+			long generation = lyricsGeneration;
+			Stage popupWindow = lyricsWindow;
+			ScrollPane popupPane = lyricsPaneSecondary;
 			double now = (player != null) ? player.getCurrentTime().toMillis() : 0;
 
 			// scroll identico a quello principale
@@ -469,7 +473,12 @@ public class KaraokePlayer {
 			lyricsWindow.show();
 
 			// assicurati che dopo il render lo scroll sia corretto
-			Platform.runLater(() -> updateLyricsHighlightAndScroll(now));
+			Platform.runLater(() -> {
+				if (lyricsGeneration != generation || lyricsWindow != popupWindow || lyricsPaneSecondary != popupPane)
+					return;
+				double currentTime = (player != null) ? player.getCurrentTime().toMillis() : 0;
+				updateLyricsHighlightAndScroll(currentTime);
+			});
 
 			// -------------------------------------------------------
 			// CHIUSURA DELLA POP-OUT
@@ -622,6 +631,7 @@ public class KaraokePlayer {
 	}
 
 	private void playMp3(Path mp3, PlaybackControls playbackControls, Label lblNowPlaying) {
+		long generation = ++lyricsGeneration;
 
 		try {
 // -------------------------------------------------------
@@ -630,7 +640,6 @@ public class KaraokePlayer {
 			disposeCurrentAudio();
 
 			currentMp3 = mp3;
-			lyricsPane.setVvalue(0);
 
 			lblNowPlaying.setText("In riproduzione: " + mp3.getFileName().toString().replace(".mp3", "").replace(".MP3", ""));
 
@@ -649,6 +658,7 @@ public class KaraokePlayer {
 				t.setFont(lyricsFont);
 				flow.getChildren().add(t);
 			}
+			resetLyricsScrollPosition();
 
 // -------------------------------------------------------
 // CREA NUOVO MEDIAPLAYER
@@ -713,11 +723,26 @@ public class KaraokePlayer {
 // -------------------------------------------------------
 			newPlayer.seek(Duration.ZERO);
 			newPlayer.play();
+			Platform.runLater(() -> {
+				if (lyricsGeneration != generation || player != newPlayer)
+					return;
+				double currentTime = newPlayer.getCurrentTime().toMillis();
+				if (currentTime <= 0)
+					resetLyricsScrollPosition();
+				else
+					updateLyricsHighlightAndScroll(currentTime);
+			});
 
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			disposeCurrentAudio();
 		}
+	}
+
+	private void resetLyricsScrollPosition() {
+		lyricsPane.setVvalue(0);
+		if (lyricsPaneSecondary != null)
+			lyricsPaneSecondary.setVvalue(0);
 	}
 
 	private void disposeCurrentAudio() {
