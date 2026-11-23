@@ -50,6 +50,7 @@ public class KaraokePlayer {
 
 	private int popoutFontSize;
 	private List<LyricsLine> currentLyrics;
+	private int activeLyricsIndex = -1;
 
 	// MAIN LYRICS FLOW (UNICO)
 	private TextFlow flow = new TextFlow();
@@ -595,12 +596,14 @@ public class KaraokePlayer {
 // -------------------------------------------------------
 			String raw = Lyrics3Reader.readLyrics(mp3);
 			currentLyrics = Lyrics3Parser.parse(raw);
+			activeLyricsIndex = -1;
 
 			flow.getChildren().clear();
+			Font lyricsFont = Font.font("Arial", lyricsWindow != null ? popoutFontSize : lyricsFontSize);
 			for (LyricsLine l : currentLyrics) {
 				Text t = new Text(l.text + "\n");
-				t.setFill(Color.WHITE);
-				t.setFont(Font.font("Arial", lyricsFontSize));
+				t.setFill(Color.rgb(180, 180, 180));
+				t.setFont(lyricsFont);
 				flow.getChildren().add(t);
 			}
 
@@ -728,27 +731,13 @@ public class KaraokePlayer {
 		ScrollPane activePane = (lyricsWindow != null) ? lyricsPaneSecondary : lyricsPane;
 		TextFlow activeFlow = (TextFlow) activePane.getContent();
 
-		var nodes = activeFlow.getChildren().stream().filter(n -> n instanceof Text).map(n -> (Text) n).toList();
-		Font lyricsFont = Font.font("Arial", lyricsWindow != null ? popoutFontSize : lyricsFontSize);
-
-		int activeIndex = -1;
-
-		// Individua la riga attiva
-		for (int i = 0; i < currentLyrics.size(); i++) {
-			LyricsLine line = currentLyrics.get(i);
-			Text node = nodes.get(i);
-			if (!node.getFont().equals(lyricsFont))
-				node.setFont(lyricsFont);
-
-			boolean active = now >= line.timestampMs
-					&& (i == currentLyrics.size() - 1 || now < currentLyrics.get(i + 1).timestampMs);
-
-			if (active) {
-				node.setFill(Color.YELLOW);
-				activeIndex = i;
-			} else {
-				node.setFill(Color.rgb(180, 180, 180));
-			}
+		int activeIndex = findActiveLyricsIndex(now);
+		if (activeIndex != activeLyricsIndex) {
+			if (activeLyricsIndex >= 0)
+				((Text) activeFlow.getChildren().get(activeLyricsIndex)).setFill(Color.rgb(180, 180, 180));
+			if (activeIndex >= 0)
+				((Text) activeFlow.getChildren().get(activeIndex)).setFill(Color.YELLOW);
+			activeLyricsIndex = activeIndex;
 		}
 
 		if (activeIndex < 0)
@@ -756,7 +745,7 @@ public class KaraokePlayer {
 
 		// --- SCROLL PRECISO ---
 
-		Text activeNode = nodes.get(activeIndex);
+		Text activeNode = (Text) activeFlow.getChildren().get(activeIndex);
 
 		// Coordinate reali della riga attiva
 		double y = activeNode.getBoundsInParent().getMinY();
@@ -781,5 +770,21 @@ public class KaraokePlayer {
 		double newValue = current + (target - current) * 0.15;
 
 		activePane.setVvalue(newValue);
+	}
+
+	private int findActiveLyricsIndex(double now) {
+		if (Double.isNaN(now))
+			return -1;
+
+		int low = 0;
+		int high = currentLyrics.size();
+		while (low < high) {
+			int middle = low + (high - low) / 2;
+			if (currentLyrics.get(middle).timestampMs <= now)
+				low = middle + 1;
+			else
+				high = middle;
+		}
+		return low == 0 ? -1 : low - 1;
 	}
 }
