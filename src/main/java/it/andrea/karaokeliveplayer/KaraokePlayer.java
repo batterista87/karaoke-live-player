@@ -16,6 +16,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
@@ -264,6 +265,11 @@ public class KaraokePlayer {
 		btnSelectFolder.setStyle(
 				"-fx-background-color:#333; -fx-background-radius:8; -fx-text-fill:white; -fx-font-size:14px; -fx-padding:6 14;");
 
+		CheckBox chkShowSubfolders = new CheckBox("Visualizza sottocartelle");
+		chkShowSubfolders.setSelected(true);
+		chkShowSubfolders.setStyle("-fx-text-fill:white;");
+		chkShowSubfolders.setFocusTraversable(false);
+
 		Button btnZoomIn = new Button("＋");
 		btnZoomIn.setStyle(
 				"-fx-background-color:#444; -fx-background-radius:6; -fx-text-fill:white; -fx-font-size:18px; -fx-padding:4 10;");
@@ -312,8 +318,9 @@ public class KaraokePlayer {
 		Region bottomSpacer = new Region();
 		HBox.setHgrow(bottomSpacer, Priority.ALWAYS);
 
-		HBox bottomBar = new HBox(10, btnSelectFolder, btnZoomIn, btnZoomOut, new Label("Font Lyrics:"), cmbPopoutFont,
-				new Label("Spaziatura righe:"), cmbLyricsLineSpacing, btnPopoutLyrics, bottomSpacer, btnFull);
+		HBox bottomBar = new HBox(10, btnSelectFolder, chkShowSubfolders, btnZoomIn, btnZoomOut,
+				new Label("Font Lyrics:"), cmbPopoutFont, new Label("Spaziatura righe:"), cmbLyricsLineSpacing,
+				btnPopoutLyrics, bottomSpacer, btnFull);
 		bottomBar.setPadding(new Insets(10));
 		bottomBar.setStyle("-fx-background-color:#222;");
 		bottomBar.setAlignment(Pos.CENTER_LEFT);
@@ -535,7 +542,11 @@ public class KaraokePlayer {
 		// -------------------------------------------------------
 		listGenres.getSelectionModel().selectedItemProperty().addListener((obs, o, n) -> {
 			if (n != null)
-				loadSongs(listGenres, listSongs);
+				loadSongs(listGenres, listSongs, chkShowSubfolders.isSelected());
+		});
+		chkShowSubfolders.selectedProperty().addListener((obs, wasSelected, isSelected) -> {
+			if (listGenres.getSelectionModel().getSelectedItem() != null)
+				loadSongs(listGenres, listSongs, isSelected);
 		});
 
 		listSongs.setOnMouseClicked(e -> {
@@ -645,7 +656,7 @@ public class KaraokePlayer {
 			playMp3(songEntry.file().toPath(), slider, volumeSlider, lblTime, lblTotal, lblNowPlaying);
 	}
 
-	private void loadSongs(ListView<File> genres, ListView<SongListEntry> songs) {
+	private void loadSongs(ListView<File> genres, ListView<SongListEntry> songs, boolean includeSubfolders) {
 		File genre = genres.getSelectionModel().getSelectedItem();
 		if (genre != null) {
 			File[] mp3Files = genre.listFiles((d, n) -> n.toLowerCase().endsWith(".mp3"));
@@ -656,24 +667,26 @@ public class KaraokePlayer {
 			}
 
 			List<SongListEntry> entries = new ArrayList<>();
-			File[] subfolders = genre.listFiles(File::isDirectory);
 			List<File[]> subfolderSongs = new ArrayList<>();
 			List<File> populatedSubfolders = new ArrayList<>();
-			if (subfolders != null) {
-				Arrays.sort(subfolders, Comparator.comparing(File::getName, String.CASE_INSENSITIVE_ORDER)
-						.thenComparing(File::getName));
-				for (File subfolder : subfolders) {
-					File[] nestedMp3s = subfolder.listFiles((d, n) -> n.toLowerCase().endsWith(".mp3"));
-					if (nestedMp3s == null) {
-						System.err.println("Impossibile leggere la sottocartella dei brani: "
-								+ subfolder.getAbsolutePath());
-					} else if (nestedMp3s.length > 0) {
-						populatedSubfolders.add(subfolder);
-						subfolderSongs.add(nestedMp3s);
+			if (includeSubfolders) {
+				File[] subfolders = genre.listFiles(File::isDirectory);
+				if (subfolders != null) {
+					Arrays.sort(subfolders, Comparator.comparing(File::getName, String.CASE_INSENSITIVE_ORDER)
+							.thenComparing(File::getName));
+					for (File subfolder : subfolders) {
+						File[] nestedMp3s = subfolder.listFiles((d, n) -> n.toLowerCase().endsWith(".mp3"));
+						if (nestedMp3s == null) {
+							System.err.println("Impossibile leggere la sottocartella dei brani: "
+									+ subfolder.getAbsolutePath());
+						} else if (nestedMp3s.length > 0) {
+							populatedSubfolders.add(subfolder);
+							subfolderSongs.add(nestedMp3s);
+						}
 					}
+				} else {
+					System.err.println("Impossibile leggere le sottocartelle di: " + genre.getAbsolutePath());
 				}
-			} else {
-				System.err.println("Impossibile leggere le sottocartelle di: " + genre.getAbsolutePath());
 			}
 
 			if (populatedSubfolders.isEmpty()) {
