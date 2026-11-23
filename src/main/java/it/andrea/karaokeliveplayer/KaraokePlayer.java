@@ -20,7 +20,6 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.OverrunStyle;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.Slider;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.ScrollEvent;
@@ -167,56 +166,20 @@ public class KaraokePlayer {
 		lblNowPlaying.setMaxWidth(400);
 		lblNowPlaying.setTextOverrun(OverrunStyle.ELLIPSIS);
 
-		Slider slider = new Slider();
-
-		Label lblTime = new Label("00:00");
-		lblTime.setTextFill(Color.WHITE);
-		lblTime.setFont(Font.font(16));
-
-		Label lblTotal = new Label("00:00");
-		lblTotal.setTextFill(Color.WHITE);
-		lblTotal.setFont(Font.font(16));
-
 		Button btnPlay = new Button("▶");
 		btnPlay.setStyle("-fx-background-color:#28a745; -fx-text-fill:white; -fx-font-size:18px;");
 
 		Button btnStop = new Button("■");
 		btnStop.setStyle("-fx-background-color:#dc3545; -fx-text-fill:white; -fx-font-size:18px;");
 
-		HBox mediaControls = new HBox(15, btnPlay, btnStop, lblTime, slider, lblTotal);
-		mediaControls.setAlignment(Pos.CENTER);
-		mediaControls.setMinWidth(400);
-		mediaControls.setPrefWidth(400);
-		mediaControls.setMaxWidth(400);
-
-		// --- FINE BLOCCO A ---
-
-		// -------------------------------------------------------
-		// VOLUME
-		// -------------------------------------------------------
-		Slider volumeSlider = new Slider(0, 100, 100);
-		volumeSlider.setStyle("-fx-control-inner-background: #333;");
-		volumeSlider.setPrefWidth(200);
-
-		Label lblVolumeValue = new Label("100%");
-		lblVolumeValue.setTextFill(Color.WHITE);
-		lblVolumeValue.setFont(Font.font("Arial", 14));
-
-		Label lblVolume = new Label("Volume");
-		lblVolume.setTextFill(Color.WHITE);
-		lblVolume.setFont(Font.font("Arial", 14));
-
-		HBox volumeControls = new HBox(10, lblVolume, volumeSlider, lblVolumeValue);
-		volumeControls.setAlignment(Pos.CENTER);
-
-		volumeSlider.valueProperty().addListener((obs, oldV, newV) -> {
+		PlaybackControls playbackControls = new PlaybackControls(btnPlay, btnStop);
+		playbackControls.volumeValueProperty().addListener((obs, oldV, newV) -> {
 			int val = newV.intValue();
-			lblVolumeValue.setText(val + "%");
 			if (player != null)
 				player.setVolume(val / 100.0);
 		});
 
-		VBox controlsColumn = new VBox(lblNowPlaying, mediaControls, volumeControls);
+		VBox controlsColumn = new VBox(lblNowPlaying, playbackControls);
 		controlsColumn.setSpacing(10);
 		controlsColumn.setPadding(new Insets(10));
 		controlsColumn.setStyle("-fx-background-color:#222;");
@@ -357,17 +320,10 @@ public class KaraokePlayer {
 		btnPopoutLyrics.setFocusTraversable(false);
 		btnFull.setFocusTraversable(false);
 
-		slider.setFocusTraversable(false);
-		volumeSlider.setFocusTraversable(false);
-
 		flow.setFocusTraversable(false);
 		lyricsPane.setFocusTraversable(false);
 
-		lblTime.setFocusTraversable(false);
-		lblTotal.setFocusTraversable(false);
 		lblNowPlaying.setFocusTraversable(false);
-		lblVolume.setFocusTraversable(false);
-		lblVolumeValue.setFocusTraversable(false);
 
 		cmbPopoutFont.setFocusTraversable(false);
 
@@ -428,10 +384,10 @@ public class KaraokePlayer {
 
 			if (e.getCode() == KeyCode.SPACE) {
 				disposeCurrentAudio();
-				slider.setValue(0);
+				playbackControls.setProgress(0);
 				lblNowPlaying.setText("In riproduzione: ---");
-				lblTime.setText("00:00");
-				lblTotal.setText("--:--");
+				playbackControls.setCurrentTime("00:00");
+				playbackControls.setTotalTime("--:--");
 				e.consume();
 			}
 
@@ -442,15 +398,15 @@ public class KaraokePlayer {
 
 			// Volume giù - A
 			if (e.getCode() == KeyCode.A) {
-				double v = Math.max(0, volumeSlider.getValue() - 2);
-				volumeSlider.setValue(v);
+				double v = Math.max(0, playbackControls.getVolumeValue() - 2);
+				playbackControls.setVolumeValue(v);
 				e.consume();
 			}
 
 			// Volume su - S
 			if (e.getCode() == KeyCode.S) {
-				double v = Math.min(100, volumeSlider.getValue() + 2);
-				volumeSlider.setValue(v);
+				double v = Math.min(100, playbackControls.getVolumeValue() + 2);
+				playbackControls.setVolumeValue(v);
 				e.consume();
 			}
 		});
@@ -541,7 +497,7 @@ public class KaraokePlayer {
 		// -------------------------------------------------------
 		btnPlay.setOnAction(e -> {
 			if (isWithin(scene.getFocusOwner(), listSongs))
-				playSelected(listSongs, slider, volumeSlider, lblTime, lblTotal, lblNowPlaying);
+				playSelected(listSongs, playbackControls, lblNowPlaying);
 		});
 
 		// -------------------------------------------------------
@@ -549,8 +505,8 @@ public class KaraokePlayer {
 		// -------------------------------------------------------
 		btnStop.setOnAction(e -> {
 			disposeCurrentAudio();
-			slider.setValue(0);
-			lblTime.setText("00:00");
+			playbackControls.setProgress(0);
+			playbackControls.setCurrentTime("00:00");
 			lblNowPlaying.setText("In riproduzione: ---");
 		});
 
@@ -572,7 +528,7 @@ public class KaraokePlayer {
 			if (e.getClickCount() == 2 && isSongCell(e.getPickResult().getIntersectedNode())
 					&& listSongs.getSelectionModel().getSelectedItem() instanceof SongEntry) {
 				listGenres.requestFocus();
-				playSelected(listSongs, slider, volumeSlider, lblTime, lblTotal, lblNowPlaying);
+				playSelected(listSongs, playbackControls, lblNowPlaying);
 			}
 		});
 
@@ -580,7 +536,7 @@ public class KaraokePlayer {
 			if (e.getCode() == KeyCode.ENTER
 					&& listSongs.getSelectionModel().getSelectedItem() instanceof SongEntry) {
 				listGenres.requestFocus();
-				playSelected(listSongs, slider, volumeSlider, lblTime, lblTotal, lblNowPlaying);
+				playSelected(listSongs, playbackControls, lblNowPlaying);
 			}
 		});
 
@@ -647,12 +603,12 @@ public class KaraokePlayer {
 		}
 	}
 
-	private void playSelected(ListView<SongListEntry> listSongs, Slider slider, Slider volumeSlider, Label lblTime,
-			Label lblTotal, Label lblNowPlaying) {
+	private void playSelected(ListView<SongListEntry> listSongs, PlaybackControls playbackControls,
+			Label lblNowPlaying) {
 
 		SongListEntry selected = listSongs.getSelectionModel().getSelectedItem();
 		if (selected instanceof SongEntry songEntry)
-			playMp3(songEntry.file().toPath(), slider, volumeSlider, lblTime, lblTotal, lblNowPlaying);
+			playMp3(songEntry.file().toPath(), playbackControls, lblNowPlaying);
 	}
 
 	private void loadSongs(ListView<File> genres, ListView<SongListEntry> songs, boolean includeSubfolders) {
@@ -665,8 +621,7 @@ public class KaraokePlayer {
 		}
 	}
 
-	private void playMp3(Path mp3, Slider slider, Slider volumeSlider, Label lblTime, Label lblTotal,
-			Label lblNowPlaying) {
+	private void playMp3(Path mp3, PlaybackControls playbackControls, Label lblNowPlaying) {
 
 		try {
 // -------------------------------------------------------
@@ -706,9 +661,8 @@ public class KaraokePlayer {
 				if (player != newPlayer)
 					return;
 				double total = newPlayer.getTotalDuration().toMillis();
-				slider.setMax(total);
-				lblTotal.setText(formatTime(total));
-				newPlayer.setVolume(volumeSlider.getValue() / 100.0);
+				playbackControls.setDuration(total, formatTime(total));
+				newPlayer.setVolume(playbackControls.getVolumeValue() / 100.0);
 			});
 
 // Quando il brano finisce
@@ -716,8 +670,8 @@ public class KaraokePlayer {
 				if (player != newPlayer)
 					return;
 				disposeCurrentAudio();
-				slider.setValue(0);
-				lblTime.setText("00:00");
+				playbackControls.setProgress(0);
+				playbackControls.setCurrentTime("00:00");
 				lblNowPlaying.setText("In riproduzione: ---");
 			});
 
@@ -741,10 +695,10 @@ public class KaraokePlayer {
 				double now = newPlayer.getCurrentTime().toMillis();
 
 				// Aggiorna slider
-				slider.setValue(now);
+				playbackControls.setProgress(now);
 
 				// Aggiorna tempo trascorso
-				lblTime.setText(formatTime(now));
+				playbackControls.setCurrentTime(formatTime(now));
 
 				// Aggiorna lyrics + scroll
 				updateLyricsHighlightAndScroll(now);
