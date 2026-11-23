@@ -25,6 +25,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Slider;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -182,6 +183,10 @@ public class KaraokePlayer {
 		lyricsPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
 		lyricsPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
 		lyricsPane.setStyle("-fx-background:#000000;");
+		lyricsPane.addEventFilter(ScrollEvent.SCROLL, event -> {
+			if (event.getDeltaY() != 0)
+				event.consume();
+		});
 
 		// -------------------------------------------------------
 		// CONTROLLI RIPRODUZIONE
@@ -463,6 +468,10 @@ public class KaraokePlayer {
 			lyricsPaneSecondary.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
 			lyricsPaneSecondary.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER); // ✅ Rimuove scrollbar verticale
 			lyricsPaneSecondary.setStyle("-fx-background:black;");
+			lyricsPaneSecondary.addEventFilter(ScrollEvent.SCROLL, event -> {
+				if (event.getDeltaY() != 0)
+					event.consume();
+			});
 
 			// ✅ rimuove il flow dalla finestra principale
 			lyricsPane.setContent(null);
