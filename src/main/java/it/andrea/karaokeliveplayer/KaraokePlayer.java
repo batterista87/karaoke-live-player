@@ -404,9 +404,17 @@ public class KaraokePlayer {
 				Node focusOwner = scene.getFocusOwner();
 				if ((isWithin(target, listSongs) || isWithin(focusOwner, listSongs))
 						&& (e.getCode() == KeyCode.UP || e.getCode() == KeyCode.DOWN)) {
-					moveSongSelection(listSongs, e.getCode() == KeyCode.UP ? -1 : 1);
-					e.consume();
-					return;
+					int direction = e.getCode() == KeyCode.UP ? -1 : 1;
+					int selectedIndex = listSongs.getSelectionModel().getSelectedIndex();
+					int nextIndex = selectedIndex < 0
+							? (direction > 0 ? 0 : listSongs.getItems().size() - 1)
+							: selectedIndex + direction;
+					if (nextIndex >= 0 && nextIndex < listSongs.getItems().size()
+							&& !(listSongs.getItems().get(nextIndex) instanceof SongEntry)) {
+						moveSongSelection(listSongs, direction);
+						e.consume();
+						return;
+					}
 				}
 			}
 
@@ -649,7 +657,6 @@ public class KaraokePlayer {
 
 		while (index >= 0 && index < listSongs.getItems().size()) {
 			if (listSongs.getItems().get(index) instanceof SongEntry) {
-				listSongs.requestFocus();
 				listSongs.getSelectionModel().clearAndSelect(index);
 				listSongs.getFocusModel().focus(index);
 				listSongs.scrollTo(index);
