@@ -19,6 +19,14 @@ echo Cartella progetto: %PROJECT_DIR%
 echo Cartella output: %DIST%
 echo.
 
+REM Compila il progetto e crea il JAR prima di generare l'eseguibile
+echo Avvio Maven clean package...
+call mvn clean package -DskipTests
+if errorlevel 1 (
+    echo Errore: Maven clean package non riuscito.
+    exit /b 1
+)
+
 REM Elimina la cartella dist se esiste
 if exist "%DIST%" (
     echo Rimozione cartella dist esistente...
