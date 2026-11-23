@@ -50,7 +50,7 @@ public class ConfigManager {
     }
 
     public int getGenreFontSize() {
-        return getListFontSize("genreFontSize");
+        return getListFontSize("genreFontSize", 20);
     }
 
     public void setGenreFontSize(int size) {
@@ -58,20 +58,28 @@ public class ConfigManager {
     }
 
     public int getSongFontSize() {
-        return getListFontSize("songFontSize");
+        return getListFontSize("songFontSize", 20);
     }
 
     public void setSongFontSize(int size) {
         props.setProperty("songFontSize", Integer.toString(size));
     }
 
-    private int getListFontSize(String key) {
+    public int getSongHeaderFontSize() {
+        return getListFontSize("songHeaderFontSize", 16);
+    }
+
+    public void setSongHeaderFontSize(int size) {
+        props.setProperty("songHeaderFontSize", Integer.toString(size));
+    }
+
+    private int getListFontSize(String key, int defaultSize) {
         try {
-            int size = Integer.parseInt(props.getProperty(key, "20"));
+            int size = Integer.parseInt(props.getProperty(key, Integer.toString(defaultSize)));
             int normalized = (int) (Math.round(size / 2.0) * 2);
             return Math.max(12, Math.min(36, normalized));
         } catch (NumberFormatException e) {
-            return 20;
+            return defaultSize;
         }
     }
     

@@ -64,6 +64,7 @@ public class KaraokePlayer {
 	private double lyricsLineSpacing;
 	private int genreFontSize;
 	private int songFontSize;
+	private int songHeaderFontSize;
 
 	private Stage lyricsWindow = null;
 	private ScrollPane lyricsPaneSecondary = null;
@@ -92,6 +93,7 @@ public class KaraokePlayer {
 		popoutFontSize = config.getPopoutFontSize();
 		genreFontSize = config.getGenreFontSize();
 		songFontSize = config.getSongFontSize();
+		songHeaderFontSize = config.getSongHeaderFontSize();
 
 		// -------------------------------------------------------
 		// LISTA GENERI
@@ -160,7 +162,7 @@ public class KaraokePlayer {
 					setTextFill(Color.WHITE);
 				} else if (item instanceof SectionHeader header) {
 					setText(header.title());
-					setFont(Font.font("Arial", FontWeight.BOLD, 16));
+					setFont(Font.font("Arial", FontWeight.BOLD, songHeaderFontSize));
 					setTextFill(Color.LIGHTGRAY);
 					setStyle("-fx-opacity: 1;");
 					setDisable(true);
@@ -315,6 +317,20 @@ public class KaraokePlayer {
 			config.save();
 		});
 
+		ComboBox<Integer> cmbSongHeaderFontSize = new ComboBox<>();
+		for (int size = 12; size <= 36; size += 2)
+			cmbSongHeaderFontSize.getItems().add(size);
+		cmbSongHeaderFontSize.setValue(songHeaderFontSize);
+		cmbSongHeaderFontSize.setFocusTraversable(false);
+		cmbSongHeaderFontSize.valueProperty().addListener((obs, oldSize, newSize) -> {
+			if (newSize == null)
+				return;
+			songHeaderFontSize = newSize;
+			listSongs.refresh();
+			config.setSongHeaderFontSize(newSize);
+			config.save();
+		});
+
 		Button btnZoomIn = new Button("＋");
 		btnZoomIn.setStyle(
 				"-fx-background-color:#444; -fx-background-radius:6; -fx-text-fill:white; -fx-font-size:18px; -fx-padding:4 10;");
@@ -364,9 +380,9 @@ public class KaraokePlayer {
 		HBox.setHgrow(bottomSpacer, Priority.ALWAYS);
 
 		HBox bottomBar = new HBox(10, btnSelectFolder, chkShowSubfolders, new Label("Font generi:"),
-				cmbGenreFontSize, new Label("Font brani:"), cmbSongFontSize, btnZoomIn, btnZoomOut,
-				new Label("Font Lyrics:"), cmbPopoutFont, new Label("Spaziatura righe:"), cmbLyricsLineSpacing,
-				btnPopoutLyrics, bottomSpacer, btnFull);
+				cmbGenreFontSize, new Label("Font brani:"), cmbSongFontSize, new Label("Font intestazioni:"),
+				cmbSongHeaderFontSize, btnZoomIn, btnZoomOut, new Label("Font Lyrics:"), cmbPopoutFont,
+				new Label("Spaziatura righe:"), cmbLyricsLineSpacing, btnPopoutLyrics, bottomSpacer, btnFull);
 		bottomBar.setPadding(new Insets(10));
 		bottomBar.setStyle("-fx-background-color:#222;");
 		bottomBar.setAlignment(Pos.CENTER_LEFT);
