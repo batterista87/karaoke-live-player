@@ -156,11 +156,6 @@ public class KaraokePlayer {
 				}
 			}
 		});
-		listSongs.getSelectionModel().selectedItemProperty().addListener((obs, previous, selected) -> {
-			if (selected instanceof SectionHeader)
-				listSongs.getSelectionModel().clearSelection();
-		});
-
 		listGenres.getStyleClass().add("focus-highlight");
 		listSongs.getStyleClass().add("focus-highlight");
 
@@ -381,9 +376,17 @@ public class KaraokePlayer {
 		// HOTKEYS
 		// -------------------------------------------------------
 		scene.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
-			if (e.getTarget() instanceof Node target && isWithin(target, lyricsPane)) {
-				e.consume();
-				return;
+			if (e.getTarget() instanceof Node target) {
+				if (isWithin(target, lyricsPane)) {
+					e.consume();
+					return;
+				}
+				if (isWithin(target, listSongs)
+						&& (e.getCode() == KeyCode.UP || e.getCode() == KeyCode.DOWN)) {
+					moveSongSelection(listSongs, e.getCode() == KeyCode.UP ? -1 : 1);
+					e.consume();
+					return;
+				}
 			}
 
 			if (e.getCode() == KeyCode.SPACE) {
@@ -605,6 +608,21 @@ public class KaraokePlayer {
 				return cell.getItem() instanceof SongEntry;
 		}
 		return false;
+	}
+
+	private static void moveSongSelection(ListView<SongListEntry> listSongs, int direction) {
+		int selectedIndex = listSongs.getSelectionModel().getSelectedIndex();
+		int index = selectedIndex < 0
+				? (direction > 0 ? 0 : listSongs.getItems().size() - 1)
+				: selectedIndex + direction;
+
+		while (index >= 0 && index < listSongs.getItems().size()) {
+			if (listSongs.getItems().get(index) instanceof SongEntry) {
+				listSongs.getSelectionModel().clearAndSelect(index);
+				return;
+			}
+			index += direction;
+		}
 	}
 
 	private void playSelected(ListView<SongListEntry> listSongs, Slider slider, Slider volumeSlider, Label lblTime,
