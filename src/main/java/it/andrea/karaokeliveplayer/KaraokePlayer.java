@@ -132,32 +132,8 @@ public class KaraokePlayer {
 				    -fx-selection-bar-text: white;
 				""");
 
-		listSongs.setCellFactory(param -> new ListCell<>() {
-			@Override
-			protected void updateItem(SongListEntry item, boolean empty) {
-				super.updateItem(item, empty);
-				setDisable(false);
-				setStyle("");
-				setOpacity(1);
-				if (empty || item == null) {
-					setText(null);
-				} else if (item instanceof SongEntry songEntry) {
-					setText(songEntry.file().getName().replaceAll("\\.mp3$", "").replaceAll("\\.MP3$", ""));
-					setFont(Font.font("Arial", FontWeight.BOLD, songFontSize));
-					setTextFill(Color.WHITE);
-				} else if (item instanceof SectionHeader header) {
-					setText(header.title());
-					setFont(Font.font("Arial", FontWeight.BOLD, songHeaderFontSize));
-					setTextFill(Color.LIGHTGRAY);
-					setStyle("-fx-opacity: 1;");
-					setDisable(true);
-				} else if (item instanceof SongListSpacer) {
-					setText(" ");
-					setDisable(true);
-					setOpacity(0);
-				}
-			}
-		});
+		listSongs.setCellFactory(
+				param -> new SongListCell(() -> songFontSize, () -> songHeaderFontSize));
 		listGenres.getStyleClass().add("focus-highlight");
 		listSongs.getStyleClass().add("focus-highlight");
 
